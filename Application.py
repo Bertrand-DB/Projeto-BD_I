@@ -4,15 +4,14 @@ from tkinter import ttk
 from tkinter import messagebox
 import tkinter as tk
 
-
-LARGURA_BT = 0.1
-ALTURA_BT = 0.14
-ESPACAMENTO_Y = 0.02
-X_BOTAO = 0.89
-
 class Application():
 
-    def __init__(self):
+    def __init__(self, host, user, password, database):
+        self.host = host
+        self.user = user
+        self.password = password
+        self.database = database
+        
         self.root = Tk()
         self.my_tree = ttk.Treeview(self.root)
         self.tela()
@@ -23,23 +22,22 @@ class Application():
         self.root.mainloop()
 
 
-
     def conexao(self):
         self.conexao = mysql.connector.connect(
-            host="127.0.0.1",
-            user="root",
-            password="746832fC",
-            database="teste"
+            host=self.host,
+            user=self.user,
+            password=self.password,
+            database=self.database
         )
         return self.conexao
        
 
 
     def tela(self):
-        self.root.geometry("1080x720")
+        self.root.geometry("720x640")
         self.root.title("Gerenciador de Restaurante")
         self.root.configure(background='#005089')
-        self.root.resizable(True, True)
+        self.root.resizable(False, False)
         self.root.wm_maxsize(1188,792)
         self.root.wm_minsize(640,480)
 
@@ -51,23 +49,23 @@ class Application():
         self.quadro_2.place(relx=0.03, rely=0.48, relwidth=0.94, relheight=0.49)
 
     def botoes(self):
-        self.bt_limpar = Button(self.quadro_1, text='Limpar')
-        self.bt_limpar.place(relx=X_BOTAO, rely=ESPACAMENTO_Y*1 + ALTURA_BT*0, relwidth=LARGURA_BT, relheight=ALTURA_BT)
+        self.bt_limpar = Button(self.quadro_1, text='Limpar', width=7)
+        self.bt_limpar.grid(row=3,column=3, columnspan=1,padx=10,pady=5)
         
-        self.bt_selecionar = Button(self.quadro_1, text='Selecionar')
-        self.bt_selecionar.place(relx=X_BOTAO, rely=ESPACAMENTO_Y*2 + ALTURA_BT*1, relwidth=LARGURA_BT, relheight=ALTURA_BT)
+        self.bt_selecionar = Button(self.quadro_1, text='Selecionar', width=7)
+        self.bt_selecionar.grid(row=4,column=3,columnspan=1,padx=10,pady=5)
         
-        self.bt_buscar = Button(self.quadro_1, text='Buscar')
-        self.bt_buscar.place(relx=X_BOTAO, rely=ESPACAMENTO_Y*3 + ALTURA_BT*2, relwidth=LARGURA_BT, relheight=ALTURA_BT)
+        self.bt_buscar = Button(self.quadro_1, text='Buscar', width=7)
+        self.bt_buscar.grid(row=5,column=3,columnspan=1,padx=10,pady=5)
 
-        self.bt_adicionar = Button(self.quadro_1, text='Adicionar')
-        self.bt_adicionar.place(relx=X_BOTAO, rely=ESPACAMENTO_Y*4 + ALTURA_BT*3, relwidth=LARGURA_BT, relheight=ALTURA_BT)
+        self.bt_adicionar = Button(self.quadro_1, background="#32CD32", text='Adicionar', width=7)
+        self.bt_adicionar.grid(row=3,column=4,columnspan=1,padx=10,pady=5)
  
-        self.bt_editar = Button(self.quadro_1, text='Editar')
-        self.bt_editar.place(relx=X_BOTAO, rely=ESPACAMENTO_Y*5 + ALTURA_BT*4, relwidth=LARGURA_BT, relheight=ALTURA_BT)
+        self.bt_editar = Button(self.quadro_1, background="#FFA500", text='Editar', width=7)
+        self.bt_editar.grid(row=4,column=4,columnspan=1,padx=10,pady=5)
 
-        self.bt_deletar = Button(self.quadro_1, text='Deletar')
-        self.bt_deletar.place(relx=X_BOTAO, rely=ESPACAMENTO_Y*6 + ALTURA_BT*5, relwidth=LARGURA_BT, relheight=ALTURA_BT)
+        self.bt_deletar = Button(self.quadro_1, background="#FF0000", text='Deletar', width=7)
+        self.bt_deletar.grid(row=5,column=4,columnspan=1,padx=10,pady=5)
 
     def label_entry(self):
         #           lABEL DO CADASTRO DE FUNCIONÁRIOS
@@ -96,8 +94,3 @@ class Application():
 
         self.salario_funcEntry = Entry(self.quadro_1, width=25, justify='left', font=("Arial", 12), highlightthickness=1, relief="solid")
         self.salario_funcEntry.grid(row=6,column=1,columnspan=1,padx=0,pady=5)
-
-
-        
-
-Application()
