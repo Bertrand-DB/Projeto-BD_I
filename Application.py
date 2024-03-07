@@ -111,16 +111,16 @@ class Application(funcoes):
 
     def label_entry(self):
         #           lABEL DO CADASTRO DE FUNCIONÁRIOS
-        self.func_Id_Label = Label(self.quadro_1,text="ID_Funcionário",font=('Arial',12),bg="#feffff", fg="#403d3d")
+        self.func_Id_Label = Label(self.quadro_1,text=TABELA[1],font=('Arial',12),bg="#feffff", fg="#403d3d")
         self.func_Id_Label.place(relx=X_LABEL, rely=ESPACAMENTO_LB*1 + ALTURA_LABEL*0, relwidth=LARGURA_LABEL, relheight=ALTURA_LABEL)
 
-        self.func_Nome_Label = Label(self.quadro_1,text="Nome",font=('Arial',12),bg="#feffff", fg="#403d3d")
+        self.func_Nome_Label = Label(self.quadro_1,text=TABELA[2],font=('Arial',12),bg="#feffff", fg="#403d3d")
         self.func_Nome_Label.place(relx=X_LABEL, rely=ESPACAMENTO_LB*2 + ALTURA_LABEL*1, relwidth=LARGURA_LABEL, relheight=ALTURA_LABEL)
 
-        self.func_Cargo_Label = Label(self.quadro_1,text="Cargo",font=('Arial',12),bg="#feffff", fg="#403d3d")
+        self.func_Cargo_Label = Label(self.quadro_1,text=TABELA[3],font=('Arial',12),bg="#feffff", fg="#403d3d")
         self.func_Cargo_Label.place(relx=X_LABEL, rely=ESPACAMENTO_LB*3 + ALTURA_LABEL*2, relwidth=LARGURA_LABEL, relheight=ALTURA_LABEL)
 
-        self.func_Salario_Label = Label(self.quadro_1,text="Salário",font=('Arial',12),bg="#feffff", fg="#403d3d")
+        self.func_Salario_Label = Label(self.quadro_1,text=TABELA[4],font=('Arial',12),bg="#feffff", fg="#403d3d")
         self.func_Salario_Label.place(relx=X_LABEL, rely=ESPACAMENTO_LB*4 + ALTURA_LABEL*3, relwidth=LARGURA_LABEL, relheight=ALTURA_LABEL)
         
         
@@ -140,10 +140,10 @@ class Application(funcoes):
     def lista_quadro_2(self):
         self.lista = ttk.Treeview(self.quadro_2,height=3,columns=("col1","col2","col3","col4"))
         #self.lista.heading("#0",text="")
-        self.lista.heading("#0",text="Id_Funcionário")
-        self.lista.heading("#1",text="Nome")
-        self.lista.heading("#2",text="Cargo")
-        self.lista.heading("#3",text="Salário")
+        self.lista.heading("#0",text=TABELA[1])
+        self.lista.heading("#2",text=TABELA[2])
+        self.lista.heading("#3",text=TABELA[3])
+        self.lista.heading("#1",text=TABELA[4])
 
         #self.lista.column("#0",width=1)
         self.lista.column("#0",width=100)
