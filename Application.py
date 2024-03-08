@@ -43,6 +43,21 @@ class funcoes():
         )
         self.cursor= self.conn.cursor()
 
+    def get_data(self):
+            self.conexao()
+            self.cursor.execute("SELECT * FROM "+TABELA[0])
+            data = self.cursor.fetchall()
+            self.conn.commit()
+            self.conn.close()
+            return data
+
+    def atualiza_tabela(self):
+        for data in self.lista.get_children():
+            self.lista.delete(data)
+
+        for array in self.get_data():
+            self.lista.insert("", END,iid=array, text="", values=(array))
+
     def insert_func(self):
         self.func_Id = self.func_Id_Entry.get()
         self.func_Nome = self.func_Nome_Entry.get()
@@ -54,6 +69,7 @@ class funcoes():
         self.cursor.execute(self.consulta,self.valores)
         self.conn.commit()
         self.conn.close()
+        self.atualiza_tabela()
 
     def delete_func(self):
         self.func_delete = self.func_Id_Entry.get()
@@ -63,6 +79,7 @@ class funcoes():
         self.cursor.execute(self.consulta,self.valores)
         self.conn.commit()
         self.conn.close()
+        self.atualiza_tabela()
 
 class Application(funcoes):
 
@@ -73,7 +90,9 @@ class Application(funcoes):
         self.botoes()
         self.label_entry()
         self.lista_quadro_2()
+        self.atualiza_tabela()
         self.root.mainloop()
+    
 
     def tela(self):
         self.root.geometry("720x640")
@@ -139,23 +158,28 @@ class Application(funcoes):
  
     def lista_quadro_2(self):
         self.lista = ttk.Treeview(self.quadro_2,height=3,columns=("col1","col2","col3","col4"))
-        #self.lista.heading("#0",text="")
-        self.lista.heading("#0",text=TABELA[1])
+        
+        self.lista.heading("#0",text="")
+        self.lista.heading("#1",text=TABELA[1])
         self.lista.heading("#2",text=TABELA[2])
         self.lista.heading("#3",text=TABELA[3])
-        self.lista.heading("#1",text=TABELA[4])
+        self.lista.heading("#4",text=TABELA[4])
 
-        #self.lista.column("#0",width=1)
-        self.lista.column("#0",width=100)
-        self.lista.column("#1",width=240)
-        self.lista.column("#2",width=150)
-        self.lista.column("#3",width=150)
+        self.lista.column("#0",width=0, stretch=False)
+        self.lista.column("#1",width=50)
+        self.lista.column("#2",width=200)
+        self.lista.column("#3",width=125)
+        self.lista.column("#4",width=125)
 
         self.lista.place(relx=0.0,rely=0.0,relwidth=0.97,relheight=1)
         self.bar_rol = Scrollbar(self.quadro_2,orient='vertical')
         self.lista.configure(yscroll=self.bar_rol.set)
         self.bar_rol.place(relx=0.97,rely=0.0,relwidth=0.03,relheight=1)
-        
+    
+    
+
+
+
 
 
 
