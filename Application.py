@@ -25,7 +25,6 @@ LARGURA_LABEL = 0.18
 ALTURA_LABEL = 0.1
 X_LABEL = 0.02
 
-
 class funcoes():
     
     def clear_entry(self):
@@ -45,7 +44,7 @@ class funcoes():
 
     def get_data(self):
             self.conexao()
-            self.cursor.execute("SELECT * FROM "+TABELA[0])
+            self.cursor.execute(f"SELECT * FROM {TABELA[0]}")
             data = self.cursor.fetchall()
             self.conn.commit()
             self.conn.close()
@@ -58,28 +57,135 @@ class funcoes():
         for array in self.get_data():
             self.lista.insert("", END,iid=array, text="", values=(array))
 
+    def get_entry(self):
+        self.e_id = self.func_Id_Entry.get()
+        self.e_nome = self.func_Nome_Entry.get()
+        self.e_cargo = self.func_Cargo_Entry.get()
+        self.e_salario = self.func_Salario_Entry.get().replace(',','.')     #sintaxe do sql usa apenas '.'
+
     def insert_func(self):
-        self.func_Id = self.func_Id_Entry.get()
-        self.func_Nome = self.func_Nome_Entry.get()
-        self.func_Cargo = self.func_Cargo_Entry.get()
-        self.func_Salario = self.func_Salario_Entry.get()
+        self.get_entry()
+        
+        if self.e_id != "":     #banco de dados que define os id únicos
+            messagebox.showinfo("Ops, entrada inválida", f"Deixa que eu cuido de {TABELA[1]}")
+        self.e_id = None
+
+        if self.e_nome.strip() == "" or self.e_cargo.strip() == "" or self.e_salario.strip() == "":     #os campos não podem ser vazios ou só espaços
+            messagebox.showerror("Erro!", "Por favor, preencha os espaços vazios!")
+            return
+        
+        try:
+            int(self.e_nome)
+        except:
+            self.e_nome     #caso não dê para converter, quer dizer que o nome não é um número, e não precisa fazer nada
+        else:               
+            messagebox.showerror("ERRO! - Elon Musk", f"'{TABELA[2]}' precisa ser um nome!")
+            return
+
         self.conexao()
-        self.consulta ="INSERT INTO "+TABELA[0]+" ("+TABELA[1]+","+TABELA[2]+","+TABELA[3]+","+TABELA[4]+")VALUES(%s,%s,%s,%s)"
-        self.valores=(self.func_Id,self.func_Nome,self.func_Cargo,self.func_Salario)
-        self.cursor.execute(self.consulta,self.valores)
+        self.consulta =f"INSERT INTO {TABELA[0]} ({TABELA[1]},{TABELA[2]},{TABELA[3]},{TABELA[4]})VALUES"+"(%s,%s,%s,%s)"
+        self.valores=(self.e_id, self.e_nome,self.e_cargo,self.e_salario)
+        
+        try:
+            self.cursor.execute(self.consulta,self.valores)
+        except mysql.connector.errors.IntegrityError as integrity_error:      #previne erros como nomes(unique key) duplicados 
+            messagebox.showerror(f"ERRO! - {integrity_error.errno}", integrity_error.msg)
+            self.conn.close()
+            return
+
         self.conn.commit()
         self.conn.close()
         self.atualiza_tabela()
+        self.clear_entry()
 
     def delete_func(self):
-        self.func_delete = self.func_Id_Entry.get()
+        self.get_entry()
+
+        try:
+            self.e_id = int(self.e_id)
+        except ValueError as val_error:
+            messagebox.showerror(f"ERRO! - Valor inválido", f"'{TABELA[1]}' a ser deletado precisa ser um valor válido!")
+            return
+
         self.conexao()
-        self.consulta = "DELETE FROM "+TABELA[0]+" WHERE "+TABELA[1]+" = %s "
-        self.valores = [self.func_delete]
+        self.consulta = f"DELETE FROM {TABELA[0]} WHERE {TABELA[1]} = "+"%s"
+        self.valores = [self.e_id]
         self.cursor.execute(self.consulta,self.valores)
         self.conn.commit()
         self.conn.close()
         self.atualiza_tabela()
+        self.clear_entry()
+
+    def select_func(self, event):
+        self.clear_entry()
+        self.lista.selection()
+        
+        for n in self.lista.selection():
+            col1, col2, col3, col4 = self.lista.item(n, 'values')
+            self.func_Id_Entry.insert(END, col1)
+            self.func_Nome_Entry.insert(END, col2)
+            self.func_Cargo_Entry.insert(END, col3)
+            self.func_Salario_Entry.insert(END, col4)
+    
+    def update_func(self):
+        self.get_entry()
+        self.conexao()
+        self.consulta = f"UPDATE {TABELA[0]} SET {TABELA[2]} = "+"%s"+f", {TABELA[3]} = "+"%s"+f", {TABELA[4]} = "+"%s"+f" WHERE {TABELA[1]} = "+"%s" #é feio, mas funciona kkk
+        self.valores = (self.e_nome, self.e_cargo, self.e_salario, self.e_id)
+
+        try:
+            self.cursor.execute(self.consulta,self.valores)
+        except mysql.connector.errors.IntegrityError as integrity_error:    #previne erros como um nome duplicado
+            messagebox.showerror(f"ERRO! - {integrity_error.errno}", integrity_error.msg)
+            self.conn.close()
+            return
+
+        self.conn.commit()
+        self.conn.close()
+        self.atualiza_tabela()
+        self.clear_entry()
+
+    def busca_func(self):
+        self.get_entry()
+
+        if self.e_id == "" and self.e_nome == "" and self.e_cargo == "" and self.e_salario == "":              #retorna a tabela completa
+            self.atualiza_tabela()
+            return
+        elif self.e_id != "" and self.e_nome == "" and self.e_cargo == "" and self.e_salario == "":            #busca por id
+            self.consulta = f"SELECT * FROM {TABELA[0]} WHERE {TABELA[1]} LIKE "+"%s"+f" ORDER BY {TABELA[1]} ASC"
+            self.e_id += '%'                                                                                   # o % permite a busca por resultados que comecem com o valor precedido
+            self.valores = [self.e_id]
+
+        elif self.e_id == "" and self.e_nome != "" and self.e_cargo == "" and self.e_salario == "":            #busca por nome
+            self.consulta = f"SELECT * FROM {TABELA[0]} WHERE {TABELA[2]} LIKE "+"%s"+f" ORDER BY {TABELA[2]} ASC"
+            self.e_nome += '%'
+            self.valores = [self.e_nome]
+
+        elif self.e_id == "" and self.e_nome == "" and self.e_cargo != "" and self.e_salario == "":            #busca por cargo
+            self.consulta = f"SELECT * FROM {TABELA[0]} WHERE {TABELA[3]} LIKE "+"%s"+f" ORDER BY {TABELA[3]} ASC"
+            self.e_cargo += '%'
+            self.valores = [self.e_cargo]
+
+        elif self.e_id == "" and self.e_nome == "" and self.e_cargo == "" and self.e_salario != "":            #busca por salário
+            self.consulta = f"SELECT * FROM {TABELA[0]} WHERE {TABELA[4]} LIKE "+"%s"+f" ORDER BY {TABELA[4]} ASC"
+            self.e_salario += '%'
+            self.valores = [self.e_salario]
+
+        else:
+            messagebox.showerror("ERRO! - Múltipla entrada", "Preencha apenas UMA entrada para a busca!")
+            self.clear_entry()
+            return
+            
+        self.conexao()
+        self.cursor.execute(self.consulta, self.valores)
+        encontrado = self.cursor.fetchall()
+        
+        self.lista.delete(*self.lista.get_children())
+        for i in encontrado:
+            self.lista.insert("", END, values=i)
+        self.clear_entry()
+        self.conn.close()
+
 
 class Application(funcoes):
 
@@ -93,7 +199,6 @@ class Application(funcoes):
         self.atualiza_tabela()
         self.root.mainloop()
     
-
     def tela(self):
         self.root.geometry("720x640")
         self.root.title("Gerenciador de Restaurante")
@@ -113,20 +218,17 @@ class Application(funcoes):
         self.bt_limpar = Button(self.quadro_1, text='Limpar', width=7,command=self.clear_entry)
         self.bt_limpar.place(relx=X_BOTAO, rely=ESPACAMENTO_BT*1 + ALTURA_BT*0, relwidth=LARGURA_BT, relheight=ALTURA_BT)
         
-        self.bt_selecionar = Button(self.quadro_1, text='Selecionar', width=7)
-        self.bt_selecionar.place(relx=X_BOTAO, rely=ESPACAMENTO_BT*2 + ALTURA_BT*1, relwidth=LARGURA_BT, relheight=ALTURA_BT)
-        
-        self.bt_buscar = Button(self.quadro_1, text='Buscar', width=7)
-        self.bt_buscar.place(relx=X_BOTAO, rely=ESPACAMENTO_BT*3 + ALTURA_BT*2, relwidth=LARGURA_BT, relheight=ALTURA_BT)
+        self.bt_buscar = Button(self.quadro_1, text='Buscar', width=7, command=self.busca_func)
+        self.bt_buscar.place(relx=X_BOTAO, rely=ESPACAMENTO_BT*2 + ALTURA_BT*1, relwidth=LARGURA_BT, relheight=ALTURA_BT)
 
         self.bt_adicionar = Button(self.quadro_1, background="#32CD32", text='Adicionar', width=7,command=self.insert_func)
-        self.bt_adicionar.place(relx=X_BOTAO, rely=ESPACAMENTO_BT*4 + ALTURA_BT*3, relwidth=LARGURA_BT, relheight=ALTURA_BT)
+        self.bt_adicionar.place(relx=X_BOTAO, rely=ESPACAMENTO_BT*3 + ALTURA_BT*2, relwidth=LARGURA_BT, relheight=ALTURA_BT)
         
-        self.bt_editar = Button(self.quadro_1, background="#FFA500", text='Editar', width=7)
-        self.bt_editar.place(relx=X_BOTAO, rely=ESPACAMENTO_BT*5 + ALTURA_BT*4, relwidth=LARGURA_BT, relheight=ALTURA_BT)
+        self.bt_editar = Button(self.quadro_1, background="#FFA500", text='Editar', width=7, command=self.update_func)
+        self.bt_editar.place(relx=X_BOTAO, rely=ESPACAMENTO_BT*4 + ALTURA_BT*3, relwidth=LARGURA_BT, relheight=ALTURA_BT)
 
         self.bt_deletar = Button(self.quadro_1, background="#FF0000", text='Deletar', width=7,command=self.delete_func)
-        self.bt_deletar.place(relx=X_BOTAO, rely=ESPACAMENTO_BT*6 + ALTURA_BT*5, relwidth=LARGURA_BT, relheight=ALTURA_BT)
+        self.bt_deletar.place(relx=X_BOTAO, rely=ESPACAMENTO_BT*5 + ALTURA_BT*4, relwidth=LARGURA_BT, relheight=ALTURA_BT)
 
     def label_entry(self):
         #           lABEL DO CADASTRO DE FUNCIONÁRIOS
@@ -155,7 +257,7 @@ class Application(funcoes):
 
         self.func_Salario_Entry = Entry(self.quadro_1, width=25, justify='left', font=("Arial", 12), highlightthickness=1, relief="solid")
         self.func_Salario_Entry.place(relx=X_LABEL+LARGURA_LABEL, rely=ESPACAMENTO_LB*4 + ALTURA_LABEL*3, relwidth=0.4, relheight=ALTURA_LABEL)
- 
+
     def lista_quadro_2(self):
         self.lista = ttk.Treeview(self.quadro_2,height=3,columns=("col1","col2","col3","col4"))
         
@@ -175,13 +277,10 @@ class Application(funcoes):
         self.bar_rol = Scrollbar(self.quadro_2,orient='vertical')
         self.lista.configure(yscroll=self.bar_rol.set)
         self.bar_rol.place(relx=0.97,rely=0.0,relwidth=0.03,relheight=1)
+        self.lista.bind("<Double-1>", self.select_func)
     
     
-
-
-
-
-
+        
 
 #janela principal
 Application()
