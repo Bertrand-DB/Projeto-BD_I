@@ -173,25 +173,21 @@ class funcoes_sql(verifica):
         entrys[0] = entrys[0].strip()
 
         if entrys[0] != "" and entrys[1] == "" and entrys[2] == "" and entrys[3] == "":            #busca por id
-            print("Apenas ID - "+str(self.espaco_vazio(entrys[0])))
             self.consulta = f"SELECT * FROM {NOME_TABELA} WHERE {NOME_COLUNA[0]} LIKE "+"%s"+f" ORDER BY {NOME_COLUNA[0]} ASC"
             entrys[0] += '%'                                                                                   # o % permite a busca por resultados que comecem com o valor precedido
             self.valores = [entrys[0]]
 
         elif entrys[0] == "" and entrys[1] != "" and entrys[2] == "" and entrys[3] == "":            #busca por nome
-            print("Apenas Nome - "+str(self.espaco_vazio(entrys[1])))
             self.consulta = f"SELECT * FROM {NOME_TABELA} WHERE {NOME_COLUNA[1]} LIKE "+"%s"+f" ORDER BY {NOME_COLUNA[1]} ASC"
             entrys[1] += '%'
             self.valores = [entrys[1]]
 
         elif entrys[0] == "" and entrys[1] == "" and entrys[2] != "" and entrys[3] == "":            #busca por cargo
-            print("Apenas Cargo - "+str(self.espaco_vazio(entrys[2])))
             self.consulta = f"SELECT * FROM {NOME_TABELA} WHERE {NOME_COLUNA[2]} LIKE "+"%s"+f" ORDER BY {NOME_COLUNA[2]} ASC"
             entrys[2] += '%'
             self.valores = [entrys[2]]
 
         elif entrys[0] == "" and entrys[1] == "" and entrys[2] == "" and entrys[3] != "":            #busca por salário
-            print("Apenas Salário - "+str(self.espaco_vazio(entrys[3])))
             self.consulta = f"SELECT * FROM {NOME_TABELA} WHERE {NOME_COLUNA[3]} LIKE "+"%s"+f" ORDER BY {NOME_COLUNA[3]} ASC"
             entrys[3] += '%'
             self.valores = [entrys[3]]
