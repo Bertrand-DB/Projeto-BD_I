@@ -8,11 +8,18 @@ import tkinter as tk
 NOME_TABELA = "Funcionários"
 NOME_COLUNA = ["Id_Funcionários", "Nome", "Cargo", "Salário"]
 
-#Dados de conexão
+'''
+#Dados de conexão bertrand
 HOST = "localhost"
 USER = "root"
 PASSWORD = "369MyRoot*"
 DATABASE = "Projeto-BD_I"
+'''
+#Dados de conexão Rodrigo
+HOST = "localhost"
+USER = "root"
+PASSWORD = "746832fC"
+DATABASE = "teste"
 
 #constantes de posição dos botões
 LARGURA_BT = 0.12
@@ -179,17 +186,18 @@ class funcoes_sql(verifica):
 
         elif entrys[0] == "" and entrys[1] != "" and entrys[2] == "" and entrys[3] == "":            #busca por nome
             self.consulta = f"SELECT * FROM {NOME_TABELA} WHERE {NOME_COLUNA[1]} LIKE "+"%s"+f" ORDER BY {NOME_COLUNA[1]} ASC"
+            entrys[1] = '%'+ entrys[1]
             entrys[1] += '%'
             self.valores = [entrys[1]]
 
         elif entrys[0] == "" and entrys[1] == "" and entrys[2] != "" and entrys[3] == "":            #busca por cargo
             self.consulta = f"SELECT * FROM {NOME_TABELA} WHERE {NOME_COLUNA[2]} LIKE "+"%s"+f" ORDER BY {NOME_COLUNA[2]} ASC"
+            entrys[2] = '%'+ entrys[2]
             entrys[2] += '%'
             self.valores = [entrys[2]]
 
         elif entrys[0] == "" and entrys[1] == "" and entrys[2] == "" and entrys[3] != "":            #busca por salário
-            self.consulta = f"SELECT * FROM {NOME_TABELA} WHERE {NOME_COLUNA[3]} LIKE "+"%s"+f" ORDER BY {NOME_COLUNA[3]} ASC"
-            entrys[3] += '%'
+            self.consulta = f"SELECT * FROM {NOME_TABELA} WHERE {NOME_COLUNA[3]} >= "+"%s"+f" ORDER BY {NOME_COLUNA[3]} ASC"
             self.valores = [entrys[3]]
             
         self.conexao()
