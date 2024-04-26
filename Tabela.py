@@ -1,7 +1,5 @@
-import mysql.connector
 from tkinter import *
 from tkinter import ttk
-from tkinter import messagebox
 import tkinter as tk
 from Verificadores import *
 from Funcoes_sql import *
@@ -70,17 +68,17 @@ class Tabela():
 
     def label_entry(self):
         #           lABEL DO CADASTRO DE FUNCIONÁRIOS
-        self.func_Id_Label = Label(self.quadro_1,text=self.NOME_COLUNA[0],font=('Arial',12),bg="#feffff", fg="#403d3d")
-        self.func_Id_Label.place(relx=X_LABEL, rely=ESPACAMENTO_LB*1 + ALTURA_LABEL*0, relwidth=LARGURA_LABEL, relheight=ALTURA_LABEL)
+        self.col0_Label = Label(self.quadro_1,text=self.NOME_COLUNA[0],font=('Arial',12),bg="#feffff", fg="#403d3d")
+        self.col0_Label.place(relx=X_LABEL, rely=ESPACAMENTO_LB*1 + ALTURA_LABEL*0, relwidth=LARGURA_LABEL, relheight=ALTURA_LABEL)
 
-        self.func_Nome_Label = Label(self.quadro_1,text=self.NOME_COLUNA[1],font=('Arial',12),bg="#feffff", fg="#403d3d")
-        self.func_Nome_Label.place(relx=X_LABEL, rely=ESPACAMENTO_LB*2 + ALTURA_LABEL*1, relwidth=LARGURA_LABEL, relheight=ALTURA_LABEL)
+        self.col1_Label = Label(self.quadro_1,text=self.NOME_COLUNA[1],font=('Arial',12),bg="#feffff", fg="#403d3d")
+        self.col1_Label.place(relx=X_LABEL, rely=ESPACAMENTO_LB*2 + ALTURA_LABEL*1, relwidth=LARGURA_LABEL, relheight=ALTURA_LABEL)
 
-        self.func_Cargo_Label = Label(self.quadro_1,text=self.NOME_COLUNA[2],font=('Arial',12),bg="#feffff", fg="#403d3d")
-        self.func_Cargo_Label.place(relx=X_LABEL, rely=ESPACAMENTO_LB*3 + ALTURA_LABEL*2, relwidth=LARGURA_LABEL, relheight=ALTURA_LABEL)
+        self.col2_Label = Label(self.quadro_1,text=self.NOME_COLUNA[2],font=('Arial',12),bg="#feffff", fg="#403d3d")
+        self.col2_Label.place(relx=X_LABEL, rely=ESPACAMENTO_LB*3 + ALTURA_LABEL*2, relwidth=LARGURA_LABEL, relheight=ALTURA_LABEL)
 
-        self.func_Salario_Label = Label(self.quadro_1,text=self.NOME_COLUNA[3],font=('Arial',12),bg="#feffff", fg="#403d3d")
-        self.func_Salario_Label.place(relx=X_LABEL, rely=ESPACAMENTO_LB*4 + ALTURA_LABEL*3, relwidth=LARGURA_LABEL, relheight=ALTURA_LABEL)
+        self.col3_Label = Label(self.quadro_1,text=self.NOME_COLUNA[3],font=('Arial',12),bg="#feffff", fg="#403d3d")
+        self.col3_Label.place(relx=X_LABEL, rely=ESPACAMENTO_LB*4 + ALTURA_LABEL*3, relwidth=LARGURA_LABEL, relheight=ALTURA_LABEL)
         
         
         #           ENTRY DOS FUNCIONÁRIOS
@@ -97,19 +95,18 @@ class Tabela():
         self.col3_entry.place(relx=X_LABEL+LARGURA_LABEL, rely=ESPACAMENTO_LB*4 + ALTURA_LABEL*3, relwidth=0.4, relheight=ALTURA_LABEL)
 
     def lista_quadro_2(self):
-        self.lista = ttk.Treeview(self.quadro_2,height=3,columns=("col1","col2","col3","col4"))
+        self.lista = ttk.Treeview(self.quadro_2, height=3, columns=self.NOME_COLUNA)
         
+        # Adiciona as colunas com os nomes fornecidos
         self.lista.heading("#0",text="")
-        self.lista.heading("#1",text=self.NOME_COLUNA[0])
-        self.lista.heading("#2",text=self.NOME_COLUNA[1])
-        self.lista.heading("#3",text=self.NOME_COLUNA[2])
-        self.lista.heading("#4",text=self.NOME_COLUNA[3])
+        for idx, nome_coluna in enumerate(self.NOME_COLUNA):
+            self.lista.heading(f"#{idx+1}", text=nome_coluna)
 
+        # Configuração das colunas
+        width_column = int(500/len(self.NOME_COLUNA))
         self.lista.column("#0",width=0, stretch=False)
-        self.lista.column("#1",width=50)
-        self.lista.column("#2",width=200)
-        self.lista.column("#3",width=125)
-        self.lista.column("#4",width=125)
+        for idx in range(len(self.NOME_COLUNA)):
+            self.lista.column(f"#{idx+1}", width=width_column, stretch=True)
 
         self.lista.place(relx=0.0,rely=0.0,relwidth=0.97,relheight=1)
         self.bar_rol = Scrollbar(self.quadro_2,orient='vertical')

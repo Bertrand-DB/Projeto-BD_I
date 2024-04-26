@@ -11,7 +11,6 @@ class Funcoes_sql(Verificadores):
         self.DATABASE = conex_dados[3]
         self.NOME_TABELA = nome_tabela
         self.NOME_COLUNA = nomes_colunas
-        
 
     def conexao(self):
         self.conn = mysql.connector.connect(
@@ -80,12 +79,12 @@ class Funcoes_sql(Verificadores):
         
         try:
             self.cursor.execute(self.consulta,self.valores)
+            self.conn.commit()
         except mysql.connector.errors.IntegrityError:      #previne erros como nomes(unique key) duplicados 
             messagebox.showerror(f"ERRO!", f"O {self.NOME_COLUNA[1]} '{entrys[1]}' já existe")
             self.conn.close()
             return False
 
-        self.conn.commit()
         self.conn.close()
         return True
 
@@ -95,8 +94,15 @@ class Funcoes_sql(Verificadores):
         self.conexao()
         self.consulta = f"DELETE FROM {self.NOME_TABELA} WHERE {self.NOME_COLUNA[0]} = "+"%s"
         self.valores = [entrys[0]]
-        self.cursor.execute(self.consulta,self.valores)
-        self.conn.commit()
+
+        try:
+            self.cursor.execute(self.consulta,self.valores)
+            self.conn.commit()
+        except Exception:
+            messagebox.showerror(f"ERRO!", "Erro Desconhecido")
+            self.conn.close()
+            return False
+
         self.conn.close()
         return True
 
