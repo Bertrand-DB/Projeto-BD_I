@@ -14,7 +14,8 @@ A_ENTRY = 0.08
 class Login_bd:
     def __init__(self):
         self.connection_data = [] #host, user, password, database
-        self.schema_metadata = {} ##dicionário schema_metadata[<nome_tabela>] = [<nomes_colunas>]
+        self.table_metadata = {} ##dicionário schema_metadata[<nome_tabela>] = [<nomes_colunas>]
+        self.view_metadata = {}
         self.root = tk.Tk()
         self.__tela()
         self.__labels_entrys()
@@ -107,11 +108,38 @@ class Login_bd:
 
         conn.close()
         return table_info
+    
+    def __get_view_info(self):
+        conn = mysql.connector.connect(
+            host=self.connection_data[0],
+            user=self.connection_data[1],
+            password=self.connection_data[2],
+            database=self.connection_data[3]
+        )
+        cursor = conn.cursor()
+        cursor.execute(f"SELECT table_name FROM information_schema.tables WHERE table_type = 'VIEW' AND table_schema = '{self.connection_data[3]}'")
+        views = list(cursor.fetchall())
+        views = [item for tupla in views for item in tupla]   # Converte lista de tuplas em lista
+        conn.commit()
+
+        view_info = {}
+
+        for view_name in views:
+            cursor.execute(f"SELECT column_name FROM information_schema.columns WHERE table_schema = '{self.connection_data[3]}' AND table_name = '{view_name}' ORDER BY ordinal_position")
+            columns = cursor.fetchall()
+            columns = [item for tupla in columns for item in tupla]
+            conn.commit()
+
+            view_info[view_name] = columns
+
+        conn.close()
+        return view_info
 
     def __funcao_login_bt(self):
         if not self.__valida_dados():
             return
 
         self.connection_data = self.__get_dados()
-        self.schema_metadata = self.__get_table_info()
+        self.table_metadata = self.__get_table_info()
+        self.view_metadata = self.__get_view_info()
         self.root.destroy()

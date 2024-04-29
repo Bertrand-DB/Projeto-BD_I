@@ -16,16 +16,17 @@ X_BOTAO = 1 - LARGURA_BT - ESPACAMENTO_BT
 
 
 class Navegacao():
-    def __init__(self,CONEX_DADOS,NOME_TABELA,NOME_COLUNA):
+    def __init__(self,CONEX_DADOS, table_metadata, view_metadata):
 
         self.CONEX_DADOS = CONEX_DADOS
-        self.NOME_TABELA = NOME_TABELA
-        self.NOME_COLUNA = NOME_COLUNA
+        self.table_metadata = table_metadata
+        self.view_metadata = view_metadata
 
         self.user_data = []
 
         self.root = tk.Tk()
-        self.fsql = Funcoes_sql(self.CONEX_DADOS,self.NOME_TABELA,self.NOME_COLUNA)
+        self.sql_card = Funcoes_sql(self.CONEX_DADOS,"cardápio",self.table_metadata["cardápio"])
+        self.sql_ped = Funcoes_sql(self.CONEX_DADOS, "pedidos_cliente",self.view_metadata["pedidos_cliente"])
         self.valida = Validadores()
 
         self.validar_digitos = self.root.register(self.valida.digitos)         #permite o tkinter reconhecer os validadores
@@ -35,7 +36,7 @@ class Navegacao():
         self.tela()
         self.quadro_inf()
         self.quadro_login()
-        self.atualiza_tabela()
+        self.atualiza_cardapio()
         self.root.mainloop()
     
     def tela(self):
@@ -52,18 +53,18 @@ class Navegacao():
 
         #----------------WIDGETS--------------
         #-- TREEVIEW -------------------------
-        self.lista_inf = ttk.Treeview(self.quadro_lista, height=3, columns=self.NOME_COLUNA)
+        self.lista_inf = ttk.Treeview(self.quadro_lista, height=3, columns=self.table_metadata["cardápio"])
         self.lista_inf.place(relx=0.0, rely=0.0, relwidth=0.97, relheight=0.97)
 
             # Adiciona as colunas com os nomes fornecidos
         self.lista_inf.heading("#0",text="")
-        for idx, nome_coluna in enumerate(self.NOME_COLUNA):
+        for idx, nome_coluna in enumerate(self.table_metadata["cardápio"]):
             self.lista_inf.heading(f"#{idx+1}", text=nome_coluna)
 
             # Configuração das colunas
-        width_column = int(500/len(self.NOME_COLUNA))
+        width_column = int(500/len(self.table_metadata["cardápio"]))
         self.lista_inf.column("#0",width=0, stretch=False)
-        for idx in range(len(self.NOME_COLUNA)):
+        for idx in range(len(self.table_metadata["cardápio"])):
             self.lista_inf.column(f"#{idx+1}", width=width_column, anchor='center', stretch=True)
 
         self.bar_rol = Scrollbar(self.quadro_lista, orient='vertical')
@@ -217,16 +218,19 @@ class Navegacao():
         self.descricao_label = Label(self.aba_compra,text="", justify='left',font=('Arial',12),bg="#feffff", fg="#403d3d", highlightthickness=2)
         self.descricao_label.place(relx=0.03, rely=0.42, relwidth=0.34, relheight=0.42)
 
-        self.id_perfil_label = Label(self.aba_perfil, text="id", justify='left',font=('Arial',12),bg="white", fg="#403d3d",relief='ridge', highlightthickness=2)
+        self.id_perfil_label = Label(self.aba_perfil, text="Id: "+self.user_data[0], justify='left',font=('Arial',12),bg="white", fg="#403d3d",relief='ridge', highlightthickness=2)
         self.id_perfil_label.place(relx=0.325, rely=0.08, relwidth=0.35, relheight=0.15)
 
-        self.nome_perfil_label = Label(self.aba_perfil,text="nome", justify='left',font=('Arial',12),bg="white", fg="#403d3d",relief='ridge', highlightthickness=2)
+        self.nome_perfil_label = Label(self.aba_perfil,text="Nome: "+self.user_data[1], justify='left',font=('Arial',12),bg="white", fg="#403d3d",relief='ridge', highlightthickness=2)
         self.nome_perfil_label.place(relx=0.325, rely=0.29, relwidth=0.35, relheight=0.15)
 
-        self.telefone_perfil_label = Label(self.aba_perfil, text="telefone", justify='left',font=('Arial',12),bg="white", fg="#403d3d",relief='ridge', highlightthickness=2)
+        self.telefone_perfil_label = Label(self.aba_perfil, text="Telefone: "+self.user_data[2], justify='left',font=('Arial',12),bg="white", fg="#403d3d",relief='ridge', highlightthickness=2)
         self.telefone_perfil_label.place(relx=0.325, rely=0.495, relwidth=0.35, relheight=0.15)
 
-        self.desconto_perfil_label = Label(self.aba_perfil, text="Flamengo/One Piece/Souza", justify='left',font=('Arial',12),bg="white", fg="#403d3d",relief='ridge', highlightthickness=2)
+        if self.user_data[3]: desconto_txt = "Sim"
+        else: desconto_txt = "Não"
+
+        self.desconto_perfil_label = Label(self.aba_perfil, text="Flamengo/One Piece/Souza? "+desconto_txt, justify='left',font=('Arial',12),bg="white", fg="#403d3d",relief='ridge', highlightthickness=2)
         self.desconto_perfil_label.place(relx=0.325, rely=0.70, relwidth=0.35, relheight=0.15)
 
         ####################################### TREEVIEW CARRINHO ########################################
@@ -244,28 +248,27 @@ class Navegacao():
         width_column = int(500/len(carrinho))
         self.lista_carrinho.column("#0",width=0, stretch=False)
         for idx in range(len(carrinho)):
-            self.lista_carrinho.column(f"#{idx+1}", width=width_column, stretch=True)
+            self.lista_carrinho.column(f"#{idx+1}", width=width_column, anchor='center', stretch=True)
         
         self.bar_rol_car = Scrollbar(self.aba_compra, orient='vertical')
         self.lista_carrinho.configure(yscroll=self.bar_rol_car.set)
         self.bar_rol_car.place(relx=0.97, rely=0.0, relwidth=0.03, relheight=0.84)
         
-        ####################################### TREEVIEW HISTORICO #######################################
+        ####################################### TREEVIEW PEDIDOS #########################################
 
-        carrinho = ["nome","preço","qtd","total"]
-        self.lista_hist = ttk.Treeview(self.aba_pedidos, height=3, columns=carrinho)
+        self.lista_hist = ttk.Treeview(self.aba_pedidos, height=3, columns=self.view_metadata["pedidos_cliente"])
         self.lista_hist.place(relx=0, rely=0, relwidth=0.97, relheight=1)
 
             # Adiciona as colunas com os nomes fornecidos
         self.lista_hist.heading("#0",text="")
-        for idx, nome_coluna in enumerate(carrinho):
+        for idx, nome_coluna in enumerate(self.view_metadata["pedidos_cliente"]):
             self.lista_hist.heading(f"#{idx+1}", text=nome_coluna)
 
             # Configuração das colunas
-        width_column = int(500/len(carrinho))
+        width_column = int(500/len(self.view_metadata["pedidos_cliente"]))
         self.lista_hist.column("#0",width=0, stretch=False)
-        for idx in range(len(carrinho)):
-            self.lista_hist.column(f"#{idx+1}", width=width_column, stretch=True)
+        for idx in range(len(self.view_metadata["pedidos_cliente"])):
+            self.lista_hist.column(f"#{idx+1}", width=width_column, anchor='center', stretch=True)
         
         self.bar_rol_hist = Scrollbar(self.aba_pedidos, orient='vertical')
         self.lista_hist.configure(yscroll=self.bar_rol_hist.set)
@@ -298,7 +301,7 @@ class Navegacao():
             self.preco_entry.insert(0,valores[4])
             self.descricao_label.config(text=valores[3])
 
-    #--FALTA LOGIN DE FUNCIONARIO
+    #FALTA LOGIN DE FUNCIONARIO
     def login_usuario(self):
             self.user_data = [self.id_user_entry.get(), self.nome_user_entry.get()]  
             self.user_data, user_tipo = self.get_user()
@@ -306,6 +309,7 @@ class Navegacao():
             if user_tipo == 'cliente':
                 self.quadro_log.destroy()
                 self.quadro_cliente()
+                self.atualiza_pedidos()
             
             elif user_tipo == 'funcionário':
                 #chamar menu de adm
@@ -314,31 +318,50 @@ class Navegacao():
             else: 
                 messagebox.showerror("Dados errados", "Nome de usuário ou id errados, tente novamente.")
                 
-    def atualiza_tabela(self):
+    def atualiza_cardapio(self):
         for data in self.lista_inf.get_children():
             self.lista_inf.delete(data)
 
-        for array in self.fsql.get_data():
+        for array in self.sql_card.get_data():
             self.lista_inf.insert("", END,iid=array, text="", values=(array))
+
+    def atualiza_pedidos(self):
+        for data in self.lista_hist.get_children():
+            self.lista_hist.delete(data)
+
+        for array in self.get_pedidos_cliente():
+            self.lista_hist.insert("", END,iid=array, text="", values=(array))
 
     # ------ FUNÇÕES SQL ----------------
     
     def get_user(self):
-        self.fsql.conexao()
-        self.fsql.cursor.execute(f"SELECT * FROM clientes WHERE id_cliente = '{self.user_data[0]}' AND nome = '{self.user_data[1]}'")
-        data = self.fsql.cursor.fetchall()
-        self.fsql.conn.commit()
+        self.sql_card.conexao()
+        self.sql_card.cursor.execute(f"SELECT * FROM clientes WHERE id_cliente = '{self.user_data[0]}' AND nome = '{self.user_data[1]}'")
+        data = self.sql_card.cursor.fetchall()
+        data = list(data[0])
+        self.sql_card.conn.commit()
         tipo = "cliente"
 
         if len(data) == 0:  # É um funcionário
-            self.fsql.cursor.execute(f"SELECT * FROM funcionários WHERE id_funcionário = '{self.user_data[0]}' AND nome = '{self.user_data[1]}'")
-            data = self.fsql.cursor.fetchall()
-            self.fsql.conn.commit()
+            self.sql_card.cursor.execute(f"SELECT * FROM funcionários WHERE id_funcionário = '{self.user_data[0]}' AND nome = '{self.user_data[1]}'")
+            data = self.sql_card.cursor.fetchall()
+            data = list(data[0])
+            self.sql_card.conn.commit()
             tipo = "funcionário"
 
         if len(data) == 0:
             tipo = None
 
-        self.fsql.conn.close()
-        
+        self.sql_card.conn.close()
+
         return data,tipo
+    
+    def get_pedidos_cliente(self):
+        self.sql_ped.conexao()
+        self.sql_ped.cursor.execute(f"SELECT * FROM pedidos_cliente WHERE nome_cliente = '{self.user_data[1]}'")
+        data = self.sql_ped.cursor.fetchall()
+        #data = list(data[0])
+        self.sql_ped.conn.commit()
+        self.sql_ped.conn.close()
+
+        return data

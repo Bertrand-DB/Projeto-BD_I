@@ -13,7 +13,7 @@ usuario = Login_bd()
 #Navegacao(usuario.connection_data, "cardápio", usuario.schema_metadata["cardápio"])
 
 
-Navegacao(usuario.connection_data, "cardápio", usuario.schema_metadata["cardápio"])
+Navegacao(usuario.connection_data, usuario.table_metadata, usuario.view_metadata)
 #Tabela(usuario.connection_data, nomestabela[0], usuario.schema_metadata[nomestabela[0]])
 
 
