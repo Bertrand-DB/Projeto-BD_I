@@ -11,7 +11,7 @@ L_ENTRY = 0.5
 A_LABEL = 0.05
 A_ENTRY = 0.08
 
-class Login:
+class Login_bd:
     def __init__(self):
         self.connection_data = [] #host, user, password, database
         self.schema_metadata = {} ##dicionário schema_metadata[<nome_tabela>] = [<nomes_colunas>]
@@ -98,7 +98,7 @@ class Login:
         table_info = {}
 
         for table_name in tables:
-            cursor.execute(f"SELECT column_name FROM information_schema.columns WHERE table_schema = '{self.connection_data[3]}' AND table_name = '{table_name}'")
+            cursor.execute(f"SELECT column_name FROM information_schema.columns WHERE table_schema = '{self.connection_data[3]}' AND table_name = '{table_name}' ORDER BY ordinal_position")
             columns = cursor.fetchall()
             columns = [item for tupla in columns for item in tupla]
             conn.commit()

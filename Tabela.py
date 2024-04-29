@@ -1,7 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 import tkinter as tk
-from Verificadores import *
+from Validadores import *
 from Funcoes_sql import *
 
 #constantes de posição dos botões
@@ -26,7 +26,7 @@ class Tabela():
 
         self.root = tk.Tk()
         self.fsql = Funcoes_sql(self.CONEX_DADOS,self.NOME_TABELA,self.NOME_COLUNA)
-        self.verifica = Verificadores()
+        self.verifica = Validadores()
         self.tela()
         self.quadros()
         self.botoes()

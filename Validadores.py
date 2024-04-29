@@ -1,4 +1,4 @@
-class Verificadores():
+class Validadores():
 
     def espaco_vazio(self, entradas):   #verifica se a(s) entradas possuem apenas espaço ou são vazias
         vazios = False
@@ -28,3 +28,29 @@ class Verificadores():
             return False
 
         return True   
+    
+    def digitos(self, entrada):
+        return entrada.isdigit() or entrada == ""
+    
+    def ponto_decimal(self, entrada):
+        # verificar se o valor é uma string vazia, apenas dígitos ou um número com um ponto decimal
+        valores = entrada.split(".")
+
+        if len(valores)>2:
+            return False
+        
+        for parte in valores:
+            if not self.digitos(parte):
+                return False
+            
+        return True
+
+    def string(self, entrada):
+        caracteres_permitidos = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ -áàâãéèêíìîóòôõúùûçÁÀÂÃÉÈÊÍÌÎÓÒÔÕÚÙÛÇ'
+        
+        # Verifica se os caracteres não estão na lista de caracteres permitidos
+        for char in entrada:
+            if char not in caracteres_permitidos:
+                return False
+
+        return True

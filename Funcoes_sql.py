@@ -1,8 +1,8 @@
-from Verificadores import *
+from Validadores import *
 from tkinter import messagebox
 import mysql.connector
 
-class Funcoes_sql(Verificadores):
+class Funcoes_sql(Validadores):
 
     def __init__(self, conex_dados, nome_tabela, nomes_colunas):
         self.HOST = conex_dados[0]
