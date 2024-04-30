@@ -3,7 +3,7 @@ from tkinter import ttk
 import tkinter as tk
 from Validadores import *
 from Funcoes_sql import *
-import re
+import decimal
 
 #constantes de posição dos botões
 LARGURA_BT = 0.10
@@ -23,10 +23,14 @@ class Navegacao():
         self.view_metadata = view_metadata
 
         self.user_data = []
+        self.carrinho = []
+        self.total_carrinho = decimal.Decimal('00.00')
 
         self.root = tk.Tk()
         self.sql_card = Funcoes_sql(self.CONEX_DADOS,"cardápio",self.table_metadata["cardápio"])
+        self.sql_cli = Funcoes_sql(self.CONEX_DADOS,"clientes",self.table_metadata["clientes"])
         self.sql_ped = Funcoes_sql(self.CONEX_DADOS, "pedidos_cliente",self.view_metadata["pedidos_cliente"])
+        self.sql_func = Funcoes_sql(self.CONEX_DADOS,"funcionários",self.table_metadata["funcionários"])
         self.valida = Validadores()
 
         self.validar_digitos = self.root.register(self.valida.digitos)         #permite o tkinter reconhecer os validadores
@@ -51,26 +55,26 @@ class Navegacao():
         self.quadro_lista = Frame(self.root, bd=4, background='white', highlightbackground='#4169e1', highlightthickness=3)
         self.quadro_lista.place(relx=0.03, rely=0.48, relwidth=0.94, relheight=0.49)
 
-        #----------------WIDGETS--------------
         #-- TREEVIEW -------------------------
-        self.lista_inf = ttk.Treeview(self.quadro_lista, height=3, columns=self.table_metadata["cardápio"])
+        cardapio = ["id_prato", "nome", "categoria", "descrição", "preço"]
+        self.lista_inf = ttk.Treeview(self.quadro_lista, height=3, columns=cardapio)
         self.lista_inf.place(relx=0.0, rely=0.0, relwidth=0.97, relheight=0.97)
 
             # Adiciona as colunas com os nomes fornecidos
         self.lista_inf.heading("#0",text="")
-        for idx, nome_coluna in enumerate(self.table_metadata["cardápio"]):
+        for idx, nome_coluna in enumerate(cardapio):
             self.lista_inf.heading(f"#{idx+1}", text=nome_coluna)
 
             # Configuração das colunas
-        width_column = int(500/len(self.table_metadata["cardápio"]))
+        width_column = int(500/len(cardapio))
         self.lista_inf.column("#0",width=0, stretch=False)
-        for idx in range(len(self.table_metadata["cardápio"])):
+        for idx in range(len(cardapio)):
             self.lista_inf.column(f"#{idx+1}", width=width_column, anchor='center', stretch=True)
 
         self.bar_rol = Scrollbar(self.quadro_lista, orient='vertical')
         self.lista_inf.configure(yscroll=self.bar_rol.set)
         self.bar_rol.place(relx=0.97, rely=0.0, relwidth=0.03, relheight=0.97)
-        self.lista_inf.bind("<Button-1>", self.atualizar_labels_entrys)
+        self.lista_inf.bind("<Double-1>", self.atualizar_labels_entrys)
 
     def quadro_login(self):
         self.quadro_log = Frame(self.root, bd=4, background='lightgray', highlightbackground='#4169e1', highlightthickness=3)
@@ -85,10 +89,11 @@ class Navegacao():
         self.bt_login = Button(self.quadro_log, text='entrar', command=self.login_usuario, width=7)
         self.bt_login.place(relx=0.53, rely=0.85, relwidth=LARGURA_BT, relheight=ALTURA_BT)
 
-        self.bt_registrar = Button(self.quadro_log, text='registre-se', width=7)
+        self.bt_registrar = Button(self.quadro_log, text='registre-se', command=self.registra_usuario, width=7)
         self.bt_registrar.place(relx=0.67, rely=0.85, relwidth=LARGURA_BT, relheight=ALTURA_BT)
 
-        self.bt_desconto = Checkbutton(self.quadro_log)
+        self.estado_checkbox = BooleanVar()
+        self.bt_desconto = Checkbutton(self.quadro_log, variable=self.estado_checkbox)
         self.bt_desconto.place(relx=0.75, rely=0.65, relwidth=0.04, relheight=0.12)
 
         ####################################### ENTRYS ###################################################
@@ -107,11 +112,11 @@ class Navegacao():
 
         self.id_user_entry = Entry(self.quadro_log, validate='key', validatecommand=(self.validar_digitos, '%P'), font=('Arial',12),bg="#feffff", fg="#403d3d", highlightthickness=2)
         self.id_user_entry.place(relx=0.51, rely=0.055, relwidth=0.28, relheight=0.15)
-        self.id_user_entry.insert(0,"24042912431312")
+        self.id_user_entry.insert(0,"24043013165960")
 
         self.nome_user_entry = Entry(self.quadro_log, validate='key', validatecommand=(self.validar_string, '%P'), font=('Arial',12),bg="#feffff", fg="#403d3d", highlightthickness=2)
         self.nome_user_entry.place(relx=0.51, rely=0.255, relwidth=0.28, relheight=0.15)
-        self.nome_user_entry.insert(0,"João Oliveira")
+        self.nome_user_entry.insert(0,"Maria Santos")
 
         self.telefone_entry = Entry(self.quadro_log, validate='key', validatecommand=(self.validar_digitos, '%P'), font=('Arial',12),bg="#feffff", fg="#403d3d", highlightthickness=2)
         self.telefone_entry.place(relx=0.51, rely=0.465, relwidth=0.28, relheight=0.15)
@@ -169,17 +174,30 @@ class Navegacao():
 
         ####################################### BOTÕES ###################################################
 
-        self.bt_adicionar = Button(self.aba_compra, text='Adicionar', width=7)
+        self.bt_adicionar = Button(self.aba_compra, text='Adicionar', command=self.adiciona_carrinho, width=7)
         self.bt_adicionar.place(relx=0.03, rely=0.85, relwidth=LARGURA_BT, relheight=ALTURA_BT)
         
-        self.bt_remover = Button(self.aba_compra, text='Remover', width=7)
+        self.bt_remover = Button(self.aba_compra, text='Remover', command=self.remove_carrinho, width=7)
         self.bt_remover.place(relx=0.15, rely=0.85, relwidth=LARGURA_BT, relheight=ALTURA_BT)
 
         self.bt_buscar = Button(self.aba_compra, text='Buscar', width=7)
         self.bt_buscar.place(relx=0.27, rely=0.85, relwidth=LARGURA_BT, relheight=ALTURA_BT)
 
         self.bt_pedir = Button(self.aba_compra, text='Pedir', width=7)
-        self.bt_pedir.place(relx=0.87, rely=0.85, relwidth=LARGURA_BT, relheight=ALTURA_BT)
+        self.bt_pedir.place(relx=0.87, rely=0.85, relwidth=0.12, relheight=ALTURA_BT)
+
+        self.pagamento = StringVar(value="Cartão")
+        self.bt_pagamento1 = Radiobutton(self.aba_compra, text="Cartão", variable=self.pagamento, value="Cartão")
+        self.bt_pagamento1.place(relx=0.42, rely=0.88)
+
+        self.bt_pagamento2 = Radiobutton(self.aba_compra, text="Boleto", variable=self.pagamento, value="Boleto")
+        self.bt_pagamento2.place(relx=0.50, rely=0.88)
+
+        self.bt_pagamento3 = Radiobutton(self.aba_compra, text="Pix", variable=self.pagamento, value="Pix")
+        self.bt_pagamento3.place(relx=0.58, rely=0.88)
+
+        self.bt_pagamento4 = Radiobutton(self.aba_compra, text="Berries", variable=self.pagamento, value="Berries")
+        self.bt_pagamento4.place(relx=0.64, rely=0.88)
 
         ####################################### ENTRYS ###################################################
 
@@ -233,9 +251,12 @@ class Navegacao():
         self.desconto_perfil_label = Label(self.aba_perfil, text="Flamengo/One Piece/Souza? "+desconto_txt, justify='left',font=('Arial',12),bg="white", fg="#403d3d",relief='ridge', highlightthickness=2)
         self.desconto_perfil_label.place(relx=0.325, rely=0.70, relwidth=0.35, relheight=0.15)
 
+        self.total_label = Label(self.aba_compra, text="R$ 00.00", justify='center',font=('Arial',12),bg="white", fg="#403d3d",relief='ridge', highlightthickness=2)
+        self.total_label.place(relx=0.73, rely=0.85, relwidth=0.12, relheight=ALTURA_BT)
+
         ####################################### TREEVIEW CARRINHO ########################################
 
-        carrinho = ["nome","preço","qtd","total"]
+        carrinho = ["id","nome","preço","qtd","sub_total"]
         self.lista_carrinho = ttk.Treeview(self.aba_compra, height=3, columns=carrinho)
         self.lista_carrinho.place(relx=0.4, rely=0.0, relwidth=0.57, relheight=0.84)
 
@@ -283,9 +304,9 @@ class Navegacao():
             self.descricao_label.config(wraplength=self.aba_compra.winfo_width()*0.32)
     
     def atualizar_labels_entrys(self, event):
-        selecao = self.lista_inf.focus()
+        selecao = self.lista_inf.selection()[0]
         if selecao:
-            if self.user_data != []:
+            if self.user_data:
                 self.qtd_entry.delete(0,END)
                 self.qtd_entry.insert(0,"1")
             
@@ -300,6 +321,14 @@ class Navegacao():
             self.categoria_entry.insert(0,valores[2])
             self.preco_entry.insert(0,valores[4])
             self.descricao_label.config(text=valores[3])
+
+    def limpa_entrys(self):
+        self.id_entry.delete(0,END)
+        self.nome_entry.delete(0,END)
+        self.categoria_entry.delete(0,END)
+        self.preco_entry.delete(0,END)
+        self.qtd_entry.delete(0,END)
+        self.descricao_label.config(text="")
 
     #FALTA LOGIN DE FUNCIONARIO
     def login_usuario(self):
@@ -322,7 +351,7 @@ class Navegacao():
         for data in self.lista_inf.get_children():
             self.lista_inf.delete(data)
 
-        for array in self.sql_card.get_data():
+        for array in self.get_cardapio():
             self.lista_inf.insert("", END,iid=array, text="", values=(array))
 
     def atualiza_pedidos(self):
@@ -332,36 +361,146 @@ class Navegacao():
         for array in self.get_pedidos_cliente():
             self.lista_hist.insert("", END,iid=array, text="", values=(array))
 
-    # ------ FUNÇÕES SQL ----------------
-    
-    def get_user(self):
+    def atualiza_carrinho(self):
+        for data in self.lista_carrinho.get_children():
+            self.lista_carrinho.delete(data)
+
+        for array in self.carrinho:
+            self.lista_carrinho.insert("", END,iid=array, text="", values=(array))
+
+    def atualiza_total(self):
+        total = decimal.Decimal('00.00')
+        for item in self.carrinho:
+            total += item[4]
+        
+        self.total_carrinho = total
+        self.total_label.config(text="R$ "+str(self.total_carrinho))
+
+    def adiciona_carrinho(self):
         self.sql_card.conexao()
-        self.sql_card.cursor.execute(f"SELECT * FROM clientes WHERE id_cliente = '{self.user_data[0]}' AND nome = '{self.user_data[1]}'")
-        data = self.sql_card.cursor.fetchall()
-        data = list(data[0])
+        self.sql_card.cursor.execute(f"SELECT id_prato, nome, preço FROM cardápio WHERE id_prato = '{self.id_entry.get()}'")
+        pedido = self.sql_card.cursor.fetchall()[0]
         self.sql_card.conn.commit()
+        self.sql_card.conn.close()
+
+        id = pedido[0]
+        nome = pedido[1]
+        preco = pedido[2]
+        qtd = int(self.qtd_entry.get())
+
+        if len(pedido) == 0:
+            messagebox.showerror("Prato não encontrado", "Não foi possível encontrar o prato, verifique o id do prato escolhido e tente novamente.")
+            return
+
+        ja_tem = False
+        # procura o pedido no carrinho, e acrescenta se já tiver
+        for item in self.carrinho:
+            if id == item[0]:
+                item[3] += qtd
+                item[4] = item[2]*item[3]*(1 - decimal.Decimal('00.15')*self.user_data[3])
+                item[4] = decimal.Decimal(item[4]).quantize(decimal.Decimal('0.01'))
+                ja_tem = True
+                break
+        
+        if not ja_tem:
+            total = preco*qtd * (1 - decimal.Decimal('00.15')*self.user_data[3])   #aplica desconto se existir
+            total = decimal.Decimal(total).quantize(decimal.Decimal('0.01'))
+            self.carrinho.append([id, nome, preco, qtd, total])
+
+        self.limpa_entrys()
+        self.atualiza_total()
+        self.atualiza_carrinho()
+
+    def remove_carrinho(self):
+        id = int(self.id_entry.get())
+        qtd = int(self.qtd_entry.get())
+
+        remover = None
+        tem = False
+        for i, item in enumerate(self.carrinho):
+            if item[0] == id:
+                item[3] -= qtd
+                item[4] = item[2]*item[3]*(1 - decimal.Decimal('00.15')*self.user_data[3])
+                item[4] = decimal.Decimal(item[4]).quantize(decimal.Decimal('0.01'))
+                tem = True
+                if item[3] <= 0:
+                    remover = i
+                break
+
+        if not tem:
+            messagebox.showerror("Prato não encontrado", "Não foi possível encontrar o prato, verifique o id do prato escolhido e tente novamente.")
+            return
+        
+        if remover is not None:
+            del self.carrinho[remover]
+
+        self.limpa_entrys()
+        self.atualiza_total()
+        self.atualiza_carrinho()
+            
+        
+    # ------ FUNÇÕES SQL ----------------
+    def registra_usuario(self):
+
+        if self.id_entry.get() != "":
+            messagebox.showinfo("Id não cadastrado", "O cadastro de id é gerado automaticamente pelo sistema.")
+
+        self.user_data = [self.nome_user_entry.get(), self.telefone_entry.get(), self.estado_checkbox.get()] 
+        
+        try:
+            
+            self.sql_cli.conexao()
+            self.sql_cli.cursor.callproc("inserir_cliente", self.user_data)
+            self.sql_cli.conn.commit()
+
+            self.sql_cli.cursor.execute(f"SELECT * FROM clientes WHERE nome = '{self.user_data[0]}'")
+            data = self.sql_cli.cursor.fetchall()
+            self.sql_cli.conn.commit()
+            self.user_data = list(data[0])
+
+            self.quadro_log.destroy()
+            self.quadro_cliente()
+            self.atualiza_pedidos()
+
+        except Exception as e:
+            messagebox.showerror("Erro ao registrar", e)
+
+        finally:
+            self.sql_cli.conn.close()
+ 
+    def get_user(self):
+        self.sql_cli.conexao()
+        self.sql_cli.cursor.execute(f"SELECT * FROM clientes WHERE id_cliente = '{self.user_data[0]}' AND nome = '{self.user_data[1]}'")
+        data = self.sql_cli.cursor.fetchall()
+        self.sql_cli.conn.commit()
+        self.sql_cli.conn.close()
         tipo = "cliente"
 
         if len(data) == 0:  # É um funcionário
-            self.sql_card.cursor.execute(f"SELECT * FROM funcionários WHERE id_funcionário = '{self.user_data[0]}' AND nome = '{self.user_data[1]}'")
-            data = self.sql_card.cursor.fetchall()
-            data = list(data[0])
-            self.sql_card.conn.commit()
+            self.sql_func.cursor.execute(f"SELECT * FROM funcionários WHERE id_funcionário = '{self.user_data[0]}' AND nome = '{self.user_data[1]}'")
+            data = self.sql_func.cursor.fetchall()
+            self.sql_func.conn.commit()
+            self.sql_func.conn.close()
             tipo = "funcionário"
-
+        
         if len(data) == 0:
-            tipo = None
+            return [],None
 
-        self.sql_card.conn.close()
-
-        return data,tipo
+        return list(data[0]),tipo
     
     def get_pedidos_cliente(self):
         self.sql_ped.conexao()
         self.sql_ped.cursor.execute(f"SELECT * FROM pedidos_cliente WHERE nome_cliente = '{self.user_data[1]}'")
         data = self.sql_ped.cursor.fetchall()
-        #data = list(data[0])
         self.sql_ped.conn.commit()
         self.sql_ped.conn.close()
 
+        return data
+    
+    def get_cardapio(self):
+        self.sql_card.conexao()
+        self.sql_card.cursor.execute(f"SELECT id_prato, nome, categoria, descrição, preço FROM cardápio")
+        data = self.sql_card.cursor.fetchall()
+        self.sql_card.conn.commit()
+        self.sql_card.conn.close()
         return data
