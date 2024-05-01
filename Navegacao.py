@@ -3,6 +3,11 @@ from tkinter import ttk
 import tkinter as tk
 from Validadores import *
 from Funcoes_sql import *
+from Tabela_cardapio import*
+from Tabela_cliente import*
+from Tabela_funcionario import*
+from Tabela_pedidos import*
+from Tabela_prato_pedido import*
 import decimal
 
 #constantes de posição dos botões
@@ -31,6 +36,8 @@ class Navegacao():
         self.sql_cli = Funcoes_sql(self.CONEX_DADOS,"clientes",self.table_metadata["clientes"])
         self.sql_ped = Funcoes_sql(self.CONEX_DADOS, "pedidos_cliente",self.view_metadata["pedidos_cliente"])
         self.sql_func = Funcoes_sql(self.CONEX_DADOS,"funcionários",self.table_metadata["funcionários"])
+        self.sql_pedir = Funcoes_sql(self.CONEX_DADOS, "pedidos",self.table_metadata["pedidos"])
+        self.sql_pra_ped = Funcoes_sql(self.CONEX_DADOS, "pratos_pedidos",self.table_metadata["pratos_pedidos"])
         self.valida = Validadores()
 
         self.validar_digitos = self.root.register(self.valida.digitos)         #permite o tkinter reconhecer os validadores
@@ -83,7 +90,7 @@ class Navegacao():
 
         ####################################### BOTÕES ###################################################
 
-        self.bt_buscar = Button(self.quadro_log, text='Buscar', width=7)
+        self.bt_buscar = Button(self.quadro_log, text='Buscar', command=self.mostrar_busca, width=7)
         self.bt_buscar.place(relx=0.03, rely=0.85, relwidth=LARGURA_BT, relheight=ALTURA_BT)
 
         self.bt_login = Button(self.quadro_log, text='entrar', command=self.login_usuario, width=7)
@@ -112,11 +119,13 @@ class Navegacao():
 
         self.id_user_entry = Entry(self.quadro_log, validate='key', validatecommand=(self.validar_digitos, '%P'), font=('Arial',12),bg="#feffff", fg="#403d3d", highlightthickness=2)
         self.id_user_entry.place(relx=0.51, rely=0.055, relwidth=0.28, relheight=0.15)
-        self.id_user_entry.insert(0,"24043013165960")
+        #self.id_user_entry.insert(0,"24043013165960")
+        self.id_user_entry.insert(0,"24043013165997")
 
         self.nome_user_entry = Entry(self.quadro_log, validate='key', validatecommand=(self.validar_string, '%P'), font=('Arial',12),bg="#feffff", fg="#403d3d", highlightthickness=2)
         self.nome_user_entry.place(relx=0.51, rely=0.255, relwidth=0.28, relheight=0.15)
-        self.nome_user_entry.insert(0,"Maria Santos")
+        #self.nome_user_entry.insert(0,"Maria Santos")
+        self.nome_user_entry.insert(0,"Maria Oliveira")
 
         self.telefone_entry = Entry(self.quadro_log, validate='key', validatecommand=(self.validar_digitos, '%P'), font=('Arial',12),bg="#feffff", fg="#403d3d", highlightthickness=2)
         self.telefone_entry.place(relx=0.51, rely=0.465, relwidth=0.28, relheight=0.15)
@@ -180,10 +189,10 @@ class Navegacao():
         self.bt_remover = Button(self.aba_compra, text='Remover', command=self.remove_carrinho, width=7)
         self.bt_remover.place(relx=0.15, rely=0.85, relwidth=LARGURA_BT, relheight=ALTURA_BT)
 
-        self.bt_buscar = Button(self.aba_compra, text='Buscar', width=7)
+        self.bt_buscar = Button(self.aba_compra, text='Buscar', command=self.mostrar_busca, width=7)
         self.bt_buscar.place(relx=0.27, rely=0.85, relwidth=LARGURA_BT, relheight=ALTURA_BT)
 
-        self.bt_pedir = Button(self.aba_compra, text='Pedir', width=7)
+        self.bt_pedir = Button(self.aba_compra, text='Pedir', command=self.pedir, width=7)
         self.bt_pedir.place(relx=0.87, rely=0.85, relwidth=0.12, relheight=ALTURA_BT)
 
         self.pagamento = StringVar(value="Cartão")
@@ -295,6 +304,49 @@ class Navegacao():
         self.lista_hist.configure(yscroll=self.bar_rol_hist.set)
         self.bar_rol_hist.place(relx=0.97, rely=0.0, relwidth=0.03, relheight=1)
     
+    def quadro_funcionario(self):
+        self.root.geometry("720x640")
+
+
+        ##################### LABELS #####################
+        estilo_entry = {
+            'font': ('Arial', 12),
+            'bg': 'white',
+            'fg': '#403d3d',
+            'readonlybackground': 'white',
+            'selectbackground': '#3272a0',
+            'selectforeground': 'white',
+            'borderwidth': 0,
+            'highlightthickness': 2,
+            'highlightbackground': '#3272a0',
+            'relief': 'ridge',
+            'justify': 'center'
+            }
+        self.id_label = Entry(self.root, **estilo_entry)
+        self.id_label.insert(0, self.user_data[0])
+        self.id_label.configure(state='readonly')
+        self.id_label.place(relx=0.20, rely=0.03, relwidth=0.25, relheight=0.05)
+
+        self.nome_label = Label(self.root, text=self.user_data[1], justify='left', font=('Arial',12),bg='white', fg="#403d3d", relief='ridge', highlightthickness=2, highlightbackground='#3272a0')
+        self.nome_label.place(relx=0.58, rely=0.03, relwidth=0.25, relheight=0.05)
+
+        ##################### BOTÕES #####################
+        
+        self.clientes_bt = Button(width=25, text='Clientes', command=self.bt_clientes, font=("Arial",12), relief="raised", bd=3, activebackground="#006ebc", activeforeground="white")
+        self.clientes_bt.place(relx=0.25, rely=0.17, relwidth=0.5, relheight=0.08)
+
+        self.funcionarios_bt = Button(width=25, text='Funcionários', command=self.bt_funcionarios, font=("Arial",12), relief="raised", bd=3, activebackground="#006ebc", activeforeground="white")
+        self.funcionarios_bt.place(relx=0.25, rely=0.33, relwidth=0.5, relheight=0.08)
+
+        self.cardapio_bt = Button(width=25, text='Cardápio', command=self.bt_cardapio, font=("Arial",12), relief="raised", bd=3, activebackground="#006ebc", activeforeground="white")
+        self.cardapio_bt.place(relx=0.25, rely=0.49, relwidth=0.5, relheight=0.08)
+
+        self.pedidos_bt = Button(width=25, text='Pedidos', command=self.bt_pedidos, font=("Arial",12), relief="raised", bd=3, activebackground="#006ebc", activeforeground="white")
+        self.pedidos_bt.place(relx=0.25, rely=0.65, relwidth=0.5, relheight=0.08)
+
+        self.pratos_ped_bt = Button(width=25, text='Pratos Pedidos', command=self.bt_pratos_ped, font=("Arial",12), relief="raised", bd=3, activebackground="#006ebc", activeforeground="white")
+        self.pratos_ped_bt.place(relx=0.25, rely=0.81, relwidth=0.5, relheight=0.08)
+
     # ------ FUNÇÕES AUXILIARES DO FRONT -------
 
     def atualizar_wraplength(self, event):
@@ -323,14 +375,15 @@ class Navegacao():
             self.descricao_label.config(text=valores[3])
 
     def limpa_entrys(self):
+        if self.user_data:
+           self.qtd_entry.delete(0,END) 
+
         self.id_entry.delete(0,END)
         self.nome_entry.delete(0,END)
         self.categoria_entry.delete(0,END)
         self.preco_entry.delete(0,END)
-        self.qtd_entry.delete(0,END)
         self.descricao_label.config(text="")
 
-    #FALTA LOGIN DE FUNCIONARIO
     def login_usuario(self):
             self.user_data = [self.id_user_entry.get(), self.nome_user_entry.get()]  
             self.user_data, user_tipo = self.get_user()
@@ -341,8 +394,9 @@ class Navegacao():
                 self.atualiza_pedidos()
             
             elif user_tipo == 'funcionário':
-                #chamar menu de adm
-                dados = "temporário"
+                self.quadro_log.destroy()
+                self.quadro_lista.destroy()
+                self.quadro_funcionario()
 
             else: 
                 messagebox.showerror("Dados errados", "Nome de usuário ou id errados, tente novamente.")
@@ -437,7 +491,34 @@ class Navegacao():
         self.limpa_entrys()
         self.atualiza_total()
         self.atualiza_carrinho()
-            
+    
+    def mostrar_busca(self):
+        for data in self.lista_inf.get_children():
+            self.lista_inf.delete(data)
+
+        for array in self.buscar():
+            self.lista_inf.insert("", END,iid=array, text="", values=(array))
+
+        self.limpa_entrys()
+
+    def copiar_texto(self, event):
+        self.root.clipboard_clear()  # Limpa o conteúdo atual da área de transferência
+        self.root.clipboard_append(string=str(self.user_data[0]))
+
+    def bt_cardapio(self):
+        card = Tabela_cardapio(self.CONEX_DADOS, "cardápio", self.table_metadata["cardápio"])
+    
+    def bt_clientes(self):
+        cli = Tabela_cliente(self.CONEX_DADOS, "clientes", self.table_metadata["clientes"])
+
+    def bt_funcionarios(self):
+        func = Tabela_funcionario(self.CONEX_DADOS, "funcionários", self.table_metadata["funcionários"])
+
+    def bt_pedidos(self):
+        ped = Tabela_pedidos(self.CONEX_DADOS, "pedidos", self.table_metadata["pedidos"])
+
+    def bt_pratos_ped(self):
+        prat = Tabela_prato_pedido(self.CONEX_DADOS, "pratos_pedidos", self.table_metadata["pratos_pedidos"])
         
     # ------ FUNÇÕES SQL ----------------
     def registra_usuario(self):
@@ -477,6 +558,7 @@ class Navegacao():
         tipo = "cliente"
 
         if len(data) == 0:  # É um funcionário
+            self.sql_func.conexao()
             self.sql_func.cursor.execute(f"SELECT * FROM funcionários WHERE id_funcionário = '{self.user_data[0]}' AND nome = '{self.user_data[1]}'")
             data = self.sql_func.cursor.fetchall()
             self.sql_func.conn.commit()
@@ -504,3 +586,69 @@ class Navegacao():
         self.sql_card.conn.commit()
         self.sql_card.conn.close()
         return data
+    
+    def pedir(self):
+        try:
+            self.sql_pedir.conexao()
+            self.sql_pedir.cursor.execute(f"INSERT INTO pedidos (id_cliente, total, pagamento) VALUES ('{self.user_data[0]}', '{self.total_carrinho}', '{self.pagamento.get()}')")
+            pedido_id = self.sql_pedir.cursor.lastrowid
+            self.sql_pedir.conn.commit()
+            
+
+            self.sql_pra_ped.conexao()
+            for item in self.carrinho:
+                self.sql_pra_ped.cursor.execute(f"INSERT INTO pratos_pedidos (id_pedido, id_prato, quantidade) VALUES ('{pedido_id}', '{item[0]}', '{item[3]}')")
+                self.sql_pra_ped.conn.commit()
+            
+        except mysql.connector.errors as e:
+            messagebox.showerror("Erro ao enviar o pedido", e)
+
+        else:
+            self.carrinho = []
+            self.total_carrinho = decimal.Decimal('00.00')
+            self.atualiza_carrinho()
+            self.atualiza_pedidos()
+            self.atualiza_cardapio()
+
+
+        finally:
+            self.sql_pedir.conn.close()
+            self.sql_pra_ped.conn.close()
+
+    def buscar(self):
+        busca_cmd = "SELECT id_prato, nome, categoria, descrição, preço FROM cardápio WHERE"
+        and_flag = False
+
+        if self.id_entry.get() != "":
+            busca_cmd += " id_prato = " + f"'{self.id_entry.get()}'"
+            and_flag = True
+        
+        if self.nome_entry.get() != "":
+            if and_flag:
+                busca_cmd += " AND"
+            busca_cmd += " nome LIKE " + f"'%{self.nome_entry.get()}%'"
+            and_flag = True
+
+        if self.categoria_entry.get() != "":
+            if and_flag:
+                busca_cmd += " AND"
+            busca_cmd += " categoria LIKE " + f"'%{self.categoria_entry.get()}%'"
+            and_flag = True
+
+        if self.preco_entry.get() != "":
+            if and_flag:
+                busca_cmd += " AND"
+            busca_cmd += " preço <= " + f"'{self.preco_entry.get()}'"
+            and_flag = True
+
+        if not and_flag:
+            busca_cmd = "SELECT id_prato, nome, categoria, descrição, preço FROM cardápio"
+
+        self.sql_card.conexao()
+        self.sql_card.cursor.execute(busca_cmd)
+        data = self.sql_card.cursor.fetchall()
+        self.sql_card.conn.commit()
+        self.sql_card.conn.close()
+        return data
+        
+        
