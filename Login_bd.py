@@ -3,7 +3,7 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
 import tkinter as tk
-from Tabela import *
+from Tabela_funcionario import *
 
 ESPACAMENT_Y = 0.045
 X_LABEL = 0.25
@@ -50,18 +50,19 @@ class Login_bd:
         self.database_entry.place(relx=X_LABEL, rely=ESPACAMENT_Y*5+A_LABEL*4+A_ENTRY*3, relwidth=L_ENTRY, relheight=A_ENTRY)
 
         #iniciador de login Bertrand
+        '''
         self.user_entry.insert(END,"root")
         self.password_entry.insert(END,"369MyRoot*")
         self.host_entry.insert(END,"localhost")
         self.database_entry.insert(END,"Projeto-BD_I")
-
         '''
+        
         #iniciador de login Rodrigo
         self.user_entry.insert(END,"root")
         self.password_entry.insert(END,"746832fC")
         self.host_entry.insert(END,"localhost")
         self.database_entry.insert(END,"teste")
-        '''
+        
 
     def __button(self):
         self.login_bt = Button(text="LOGIN", font=("Arial",12), relief="raised", bd=2, activebackground="#006ebc", activeforeground="white", command=self.__funcao_login_bt)
