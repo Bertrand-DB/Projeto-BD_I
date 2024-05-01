@@ -142,7 +142,6 @@ class Tabela_pedidos():
                self.col5_entry.get().strip(),
                self.col6_entry.get().strip()]
     
-
     def preencher(self, event):
         self.clear_entry()
         self.lista.selection()

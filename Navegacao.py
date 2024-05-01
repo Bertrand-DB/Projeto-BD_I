@@ -586,6 +586,7 @@ class Navegacao():
         self.sql_card.conn.commit()
         self.sql_card.conn.close()
         return data
+
     
     def pedir(self):
         try:
