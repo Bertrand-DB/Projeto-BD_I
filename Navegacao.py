@@ -119,13 +119,13 @@ class Navegacao():
 
         self.id_user_entry = Entry(self.quadro_log, validate='key', validatecommand=(self.validar_digitos, '%P'), font=('Arial',12),bg="#feffff", fg="#403d3d", highlightthickness=2)
         self.id_user_entry.place(relx=0.51, rely=0.055, relwidth=0.28, relheight=0.15)
-        #self.id_user_entry.insert(0,"24043013165960")
-        self.id_user_entry.insert(0,"24043013165997")
+        self.id_user_entry.insert(0,"24043013165960")
+        #self.id_user_entry.insert(0,"24043013165997")
 
         self.nome_user_entry = Entry(self.quadro_log, validate='key', validatecommand=(self.validar_string, '%P'), font=('Arial',12),bg="#feffff", fg="#403d3d", highlightthickness=2)
         self.nome_user_entry.place(relx=0.51, rely=0.255, relwidth=0.28, relheight=0.15)
-        #self.nome_user_entry.insert(0,"Maria Santos")
-        self.nome_user_entry.insert(0,"Maria Oliveira")
+        self.nome_user_entry.insert(0,"Maria Santos")
+        #self.nome_user_entry.insert(0,"Maria Oliveira")
 
         self.telefone_entry = Entry(self.quadro_log, validate='key', validatecommand=(self.validar_digitos, '%P'), font=('Arial',12),bg="#feffff", fg="#403d3d", highlightthickness=2)
         self.telefone_entry.place(relx=0.51, rely=0.465, relwidth=0.28, relheight=0.15)
@@ -607,6 +607,7 @@ class Navegacao():
         else:
             self.carrinho = []
             self.total_carrinho = decimal.Decimal('00.00')
+            self.total_label.config(text=self.carrinho)
             self.atualiza_carrinho()
             self.atualiza_pedidos()
             self.atualiza_cardapio()
